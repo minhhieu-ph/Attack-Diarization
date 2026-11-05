@@ -1,0 +1,60 @@
+# Where each dataset comes from and how it is parsed.
+# Files land in dataset/raw/<name>/. If an automatic download fails, put the
+# downloaded archive (zip/csv/parquet) into that folder by hand and rerun
+# `python scripts/prepare.py`; the loader scans the folder for CSV/parquet files.
+
+cidds001:
+  loader: cidds
+  url: https://www.hs-coburg.de/wp-content/uploads/2024/11/CIDDS-001.zip
+  page: https://www.hs-coburg.de/forschen/cidds-coburg-intrusion-detection-data-sets/
+  gt: attack_id           # native AttackID + attacker/victim role labels
+
+nf_unsw_nb15_v3:
+  loader: netflow_v3
+  url: https://rdm.uq.edu.au/files/abd2f5d8-e268-4ff0-84fb-f2f7b3ca3e8f
+  page: https://staff.itee.uq.edu.au/marius/NIDS_datasets/
+  hf_pattern: UNSW
+  gt: schedule
+
+nf_bot_iot_v3:
+  loader: netflow_v3
+  url: https://rdm.uq.edu.au/files/db0187cc-1f78-4215-8e34-303364498866
+  page: https://staff.itee.uq.edu.au/marius/NIDS_datasets/
+  hf_pattern: BoT
+  gt: schedule
+
+nf_ton_iot_v3:
+  loader: netflow_v3
+  url: https://rdm.uq.edu.au/files/343e2e8c-6e6e-4a0c-813d-a46acea1b7f4
+  page: https://staff.itee.uq.edu.au/marius/NIDS_datasets/
+  hf_pattern: ToN
+  gt: schedule
+
+nf_cse_cic_ids2018_v3:
+  loader: netflow_v3
+  url: https://rdm.uq.edu.au/files/4ac221b1-6bd6-42b1-bdf7-03f4fc7efb22
+  page: https://staff.itee.uq.edu.au/marius/NIDS_datasets/
+  hf_pattern: CIC
+  gt: schedule
+
+# Synthetic datasets for the smoke test (scripts/make_synthetic.py writes them).
+synth_netflow:
+  loader: netflow_v3
+  gt: schedule
+
+synth_cidds:
+  loader: cidds
+  gt: attack_id
+
+# Optional mirror (parquet) used when --source hf is given.
+hf_mirror:
+  repo_id: keys-i/netFlow
+
+# Attack-name families used only for cross-dataset experiments (E5).
+families:
+  dos: [dos, "dos attacks-hulk", "dos attacks-goldeneye", "dos attacks-slowloris", "dos attacks-slowhttptest"]
+  ddos: [ddos, "ddos attack-hoic", "ddos attack-loic-udp", "ddos attacks-loic-http"]
+  scanning: [scanning, reconnaissance, portscan, pingscan, "theft"]
+  bruteforce: [bruteforce, "brute force -web", "brute force -xss", "ftp-bruteforce", "ssh-bruteforce", password]
+  injection: [injection, "sql injection", xss, exploits]
+  backdoor: [backdoor, bot, infilteration, infiltration, ransomware]

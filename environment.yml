@@ -1,0 +1,24 @@
+# Conda environment for the Attack Diarization project.
+# PyTorch is NOT listed here on purpose: setup_env.sh installs the wheel that
+# matches the CUDA version reported by the driver (B300 needs CUDA >= 12.8).
+name: attackdiar
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy>=1.26
+  - pandas>=2.2
+  - pyarrow>=15
+  - scipy>=1.11
+  - scikit-learn>=1.4
+  - pyyaml>=6
+  - tqdm
+  - requests
+  - matplotlib
+  - optuna>=3.6
+  - pytest
+  - tabulate
+  - pip:
+      - xgboost>=2.1          # pip wheel ships with CUDA support (device="cuda")
+      - huggingface_hub>=0.24 # optional mirror for NetFlow v3

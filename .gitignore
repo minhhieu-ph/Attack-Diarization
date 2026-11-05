@@ -1,0 +1,10 @@
+dataset/raw/*
+dataset/interim/*
+dataset/processed/*
+!dataset/**/.gitkeep
+dataset_smoke/
+outputs/
+outputs_smoke/
+__pycache__/
+*.egg-info/
+.pytest_cache/

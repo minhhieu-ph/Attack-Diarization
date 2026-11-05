@@ -1,0 +1,4 @@
+# Attack schedule for nf_unsw_nb15_v3 (see dataset/README.md).
+# Fill one row per attack run from the testbed documentation, then rename to nf_unsw_nb15_v3.csv
+# Times: epoch ms or date-time strings with the tz column. Leave attackers/victims empty if unknown.
+start,end,attack,attackers,victims,tz

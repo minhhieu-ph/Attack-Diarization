@@ -1,0 +1,22 @@
+# Settings sized for the SPACE job: 1x NVIDIA B300 (275 GB), 28 CPUs, 450 GiB RAM limit.
+# Exceeding the RAM limit gets the container OOM-killed, so CPU-side batch sizes and
+# per-class training caps are kept moderate. Use: --config configs/b300.yaml
+compute:
+  device: cuda
+  n_jobs: 24            # leave a few cores for the data loader / OS
+  num_workers: 4
+  amp_dtype: bfloat16
+  ram_limit_gib: 450
+
+flow_models:
+  max_train_per_class: 2000000
+  ftt: {batch_size: 32768}
+  gnn: {chunk_flows: 200000}
+  tgn: {batch_flows: 5000}
+
+flowdiar:
+  windows_per_batch: 48   # GPU-side; 275 GB is plenty
+  max_hosts: 4096
+
+tuning:
+  n_trials: 20

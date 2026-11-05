@@ -1,0 +1,46 @@
+# Tiny end-to-end run on synthetic data (scripts/make_synthetic.py).
+# Exercises every experiment in a few minutes; numbers are meaningless.
+project:
+  output_dir: outputs_smoke
+  dataset_dir: dataset_smoke
+
+data:
+  datasets: [synth_netflow, synth_cidds]
+
+compute:
+  n_jobs: 4
+  num_workers: 0
+
+seeds: [0, 1]
+
+flow_models:
+  max_train_per_class: 20000
+  xgb: {n_estimators: 50, max_depth: 4, learning_rate: 0.3, subsample: 1.0,
+        colsample_bytree: 1.0, max_bin: 64, early_stopping_rounds: 10}
+  ftt: {d_model: 16, n_layers: 1, n_heads: 2, dropout: 0.0, lr: 3.0e-3,
+        weight_decay: 0.0, batch_size: 1024, epochs: 2, patience: 1}
+  gnn: {d_model: 16, n_layers: 1, dropout: 0.0, lr: 3.0e-3, weight_decay: 0.0,
+        chunk_flows: 2000, epochs: 2, patience: 1}
+  tgn: {d_model: 16, dropout: 0.0, lr: 3.0e-3, weight_decay: 0.0,
+        batch_flows: 500, epochs: 1, patience: 1}
+
+flowdiar:
+  window_bins: 32
+  stride_bins: 16
+  max_hosts: 256
+  d_model: 32
+  n_heads: 2
+  n_layers_temporal: 1
+  n_layers_graph: 1
+  epochs: 2
+  patience: 1
+  windows_per_batch: 8
+
+tuning:
+  enabled: false
+  n_trials: 2
+
+stress:
+  slow_factors: [5]
+  interleave_rates: [1.0]
+  split_sources: [2]

@@ -1,0 +1,119 @@
+# Default configuration. Override with another YAML (--config) and/or
+# command-line pairs (--set flowdiar.lr=1e-4 seeds=[0,1]).
+
+project:
+  output_dir: outputs
+  dataset_dir: dataset
+
+compute:
+  device: auto            # auto | cuda | cpu
+  n_jobs: 24              # CPU threads for xgboost / pyarrow / torch (job has 28 CPUs)
+  amp_dtype: bfloat16     # bfloat16 | float16 | float32
+  tf32: true
+  num_workers: 4
+  ram_limit_gib: 450       # warn when the process RSS gets close to this
+
+data:
+  # Order matters only for reporting.
+  datasets: [cidds001, nf_unsw_nb15_v3, nf_bot_iot_v3, nf_ton_iot_v3, nf_cse_cic_ids2018_v3]
+  max_rows: null          # cap rows per dataset (debug only)
+  cidds:
+    environment: openstack  # openstack | external | both
+    weeks: [1, 2, 3, 4]
+    drop_victim_replies: true
+
+episodes:
+  # Ground-truth source, tried in this order. "heuristic" is a fallback and is
+  # flagged as NOT independent of baseline B1 (see dataset/README.md).
+  source_priority: [attack_id, schedule, heuristic]
+  tau_sec: 60             # gap for heuristic GT
+  tau_grid_sec: [10, 60, 300]   # E1 cross-check
+  schedule_tolerance_sec: 60
+  merge_victim_jaccard: 0.5     # merge same-class episodes into multi-attacker episodes
+  merge_gap_sec: 0
+
+splits:
+  names: [temporal, host]
+  fractions: [0.6, 0.2, 0.2]
+  seed: 0
+  gap_search_frac: 0.05   # move temporal cuts into an attack-free gap within +-5% of span
+  temporal_by: episodes   # cut at quantiles of episode start times (flows: of flow times)
+
+metrics:
+  iou_threshold: 0.5
+  collar_sec: 5
+  attribution_jaccard: 0.5
+  minute_sec: 60          # granularity for "benign hours" (false alarms per hour)
+
+seeds: [0, 1, 2, 3, 4]
+
+# Baselines = per-flow model + post-processing that turns flow alerts into episodes.
+baselines:
+  B1: {flow_model: xgb, post: sessionize}
+  B2: {flow_model: xgb, post: hmm}
+  B3: {flow_model: xgb, post: dbscan}
+  B4: {flow_model: ftt, post: sessionize}
+  B5: {flow_model: gnn, post: sessionize}
+  B6: {flow_model: tgn, post: sessionize}
+  B7: {flow_model: xgb, post: sage}
+
+flow_models:
+  max_train_per_class: 2000000   # subsample large classes for training
+  xgb: {n_estimators: 600, max_depth: 8, learning_rate: 0.1, subsample: 0.8,
+        colsample_bytree: 0.8, max_bin: 256, early_stopping_rounds: 30}
+  ftt: {d_model: 64, n_layers: 3, n_heads: 4, dropout: 0.1, lr: 1.0e-3,
+        weight_decay: 1.0e-5, batch_size: 8192, epochs: 15, patience: 3}
+  gnn: {d_model: 128, n_layers: 2, dropout: 0.1, lr: 1.0e-3, weight_decay: 1.0e-5,
+        chunk_flows: 50000, epochs: 15, patience: 3}
+  tgn: {d_model: 100, dropout: 0.1, lr: 1.0e-3, weight_decay: 1.0e-5,
+        batch_flows: 2000, epochs: 5, patience: 2}
+
+post:
+  sessionize: {tau_grid_sec: [5, 10, 30, 60, 120, 300]}
+  hmm: {p_stay_grid: [0.9, 0.99, 0.999], tau_grid_sec: [10, 60, 300]}
+  dbscan: {eps_grid_sec: [5, 30, 120], min_samples: 3}
+  sage: {bin_sec: 5, tau_grid_sec: [10, 60, 300], valley_ratio: 0.25, min_alerts_split: 20}
+
+flowdiar:
+  bin_sec: 2
+  window_bins: 64
+  stride_bins: 32
+  max_hosts: 2048
+  d_model: 128
+  n_heads: 4
+  n_layers_temporal: 2
+  n_layers_graph: 2
+  dropout: 0.1
+  use_graph: true
+  use_temporal: true
+  decoder: hysteresis     # hysteresis | sessionize
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  epochs: 30
+  patience: 5
+  windows_per_batch: 16
+  benign_window_keep: 0.2 # fraction of attack-free windows kept per epoch
+  hysteresis_high_grid: [0.5, 0.7, 0.9]
+  hysteresis_low_ratio: 0.5
+  gap_fill_bins: 2
+  victim_prob: 0.3
+  sessionize_tau_grid_sec: [10, 60, 300]
+
+tuning:
+  enabled: true
+  n_trials: 10            # same budget for every model
+  timeout_sec: 7200
+
+stress:                   # E7
+  slow_factors: [5, 10]
+  interleave_rates: [1.0, 3.0]
+  split_sources: [4]
+
+gate:                     # H1 decision (E1-E3)
+  stop_f1: 0.95
+  stop_attr: 0.95
+  go_gap_points: 10
+
+hypotheses:
+  h2_f1_points: 5
+  h2_ttd_reduction: 0.30
